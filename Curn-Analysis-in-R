@@ -1,0 +1,611 @@
+# Load needed packages
+
+> install.packages("dplyr")
+> install.packages("mice")
+> install.packages("corrplot")
+> install.packages("Hmisc")
+> install.packages("ggpubr")
+> install.packages("caret")
+> install.packages("psych")
+> install.packages("rattle")
+
+
+# Read in Curn data CSV
+
+> churn1 <- read.csv("Churn _Data_CL1.csv")
+
+
+# Initial data exploration 
+
+> head(churn1)
+
+> summary(churn1)
+
+> str(churn1)
+
+
+# check numeric variables for normal distribution 
+
+> library("ggpubr")
+
+> ggdensity(churn1$REVENUE, main = "Density plot", xlab = "REVENUE")
+> ggdensity(churn1$MOU, main = "Density plot", xlab = "MOU")
+> ggdensity(churn1$RECCHRGE, main = "Density plot", xlab = "RECCHRGE")
+> ggdensity(churn1$DIRECTAS, main = "Density plot", xlab = "DIRECTAS")
+> ggdensity(churn1$OVERAGE, main = "Density plot", xlab = "OVERAGE")
+> ggdensity(churn1$ROAM, main = "Density plot", xlab = "ROAM")
+> ggdensity(churn1$CHANGEM, main = "Density plot", xlab = "CHANGEM")
+> ggdensity(churn1$CHANGER, main = "Density plot", xlab = "CHANGER")
+> ggdensity(churn1$DROPVCE, main = "Density plot", xlab = "DROPVCE")
+> ggdensity(churn1$BLCKVCE, main = "Density plot", xlab = "BLCKVCE")
+> ggdensity(churn1$UNANSVCE, main = "Density plot", xlab = "UNANSVCE")
+> ggdensity(churn1$CUSTCARE, main = "Density plot", xlab = "CUSTCARE")
+> ggdensity(churn1$THREEWAY, main = "Density plot", xlab = "THREEWAY")
+> ggdensity(churn1$MOUREC, main = "Density plot", xlab = "MOUREC")
+> ggdensity(churn1$OUTCALLS, main = "Density plot", xlab = "OUTCALLS")
+> ggdensity(churn1$INCALLS, main = "Density plot", xlab = "INCALLS")
+> ggdensity(churn1$PEAKVCE, main = "Density plot", xlab = "PEAKVCE")
+> ggdensity(churn1$OPEAKVCE, main = "Density plot", xlab = "OPEAKVCE")
+> ggdensity(churn1$DROPBLK, main = "Density plot", xlab = "DROPBLK")
+> ggdensity(churn1$CALLFWDV, main = "Density plot", xlab = "CALLFWDV")
+> ggdensity(churn1$CALLWAIT, main = "Density plot", xlab = "CALLWAIT")
+> ggdensity(churn1$MONTHS, main = "Density plot", xlab = "MONTHS")
+> ggdensity(churn1$UNIQSUBS, main = "Density plot", xlab = "UNIQSUBS")
+> ggdensity(churn1$ACTVSUBS, main = "Density plot", xlab = "ACTVSUBS")
+> ggdensity(churn1$PHONES, main = "Density plot", xlab = "PHONES")
+> ggdensity(churn1$MODELS, main = "Density plot", xlab = "MODELS")
+> ggdensity(churn1$EQPDAYS, main = "Density plot", xlab = "EQPDAYS")
+> ggdensity(churn1$AGE1, main = "Density plot", xlab = "AGE1")
+> ggdensity(churn1$AGE2, main = "Density plot", xlab = "AGE2")
+> ggdensity(churn1$CHILDREN, main = "Density plot", xlab = "CHILDREN")
+> ggdensity(churn1$RETCALLS, main = "Density plot", xlab = "RETCALLS")
+> ggdensity(churn1$RETACCPT, main = "Density plot", xlab = "RETACCPT")
+> ggdensity(churn1$REFER, main = "Density plot", xlab = "REFER")
+> ggdensity(churn1$CREDITAD, main = "Density plot", xlab = "CREDITAD")
+> ggdensity(churn1$SETPRC, main = "Density plot", xlab = "SETPRC")
+
+
+> shapiro.test(churn1$REVENUE)
+> shapiro.test(churn1$MOU)
+> shapiro.test(churn1$RECCHRGE)
+> shapiro.test(churn1$DIRECTAS)
+> shapiro.test(churn1$OVERAGE)
+> shapiro.test(churn1$ROAM)
+> shapiro.test(churn1$CHANGEM)
+> shapiro.test(churn1$CHANGER)
+> shapiro.test(churn1$DROPVCE)
+> shapiro.test(churn1$BLCKVCE)
+> shapiro.test(churn1$UNANSVCE)
+> shapiro.test(churn1$CUSTCARE)
+> shapiro.test(churn1$THREEWAY)
+> shapiro.test(churn1$MOUREC)
+> shapiro.test(churn1$OUTCALLS)
+> shapiro.test(churn1$INCALLS)
+> shapiro.test(churn1$PEAKVCE)
+> shapiro.test(churn1$OPEAKVCE)
+> shapiro.test(churn1$DROPBLK)
+> shapiro.test(churn1$CALLFWDV)
+> shapiro.test(churn1$CALLWAIT)
+> shapiro.test(churn1$MONTHS)
+> shapiro.test(churn1$UNIQSUBS)
+> shapiro.test(churn1$ACTVSUBS)
+> shapiro.test(churn1$PHONES)
+> shapiro.test(churn1$MODELS)
+> shapiro.test(churn1$EQPDAYS)
+> shapiro.test(churn1$AGE1)
+> shapiro.test(churn1$AGE2)
+> shapiro.test(churn1$CHILDREN)
+> shapiro.test(churn1$RETCALLS)
+> shapiro.test(churn1$RETACCPT)
+> shapiro.test(churn1$REFER)
+> shapiro.test(churn1$CREDITAD)
+> shapiro.test(churn1$SETPRC)
+
+
+# Remove redundant columns (info already summerized by another column), colums with more that a small % blank, and too unique columns
+# Subset to only colums that should be considered
+
+> library(dplyr)
+
+> churn2<-churn1[c(1:29,33,41,45:49,57,59,63,65:75,78,79,82)]
+
+
+# convert all categorical variables into factors
+
+
+> churn2$CHURN = as.factor(churn2$CHURN)
+> churn2$CHILDREN = as.factor(churn2$CHILDREN)
+> churn2$CREDIT_RATING = as.factor(churn2$CREDIT_RATING)
+> churn2$PRZM_NUM = as.factor(churn2$PRZM_NUM)
+> churn2$REFURB = as.factor(churn2$REFURB)
+> churn2$WEBCAP = as.factor(churn2$WEBCAP)
+> churn2$TRUCK = as.factor(churn2$TRUCK)
+> churn2$RV = as.factor(churn2$RV)
+> churn2$OCC = as.factor(churn2$OCC)
+> churn2$OWNRENT = as.factor(churn2$OWNRENT)
+> churn2$MARRY = as.factor(churn2$MARRY)
+> churn2$MAILORD = as.factor(churn2$MAILORD)
+> churn2$MAILRES = as.factor(churn2$MAILRES)
+> churn2$MAILFLAG = as.factor(churn2$MAILFLAG)
+> churn2$TRAVEL = as.factor(churn2$TRAVEL)
+> churn2$PCOWN = as.factor(churn2$PCOWN)
+> churn2$CREDITCD = as.factor(churn2$CREDITCD)
+> churn2$NEWCELLY = as.factor(churn2$NEWCELLY)
+> churn2$NEWCELLN = as.factor(churn2$NEWCELLN)
+> churn2$REFER = as.factor(churn2$REFER)
+> churn2$MCYCLE = as.factor(churn2$MCYCLE)
+> churn2$RETCALL = as.factor(churn2$RETCALL)
+
+
+# confirm
+
+> str(churn2)
+> summary(churn2)
+
+# REVENUE, MOU, RECCHRGE, DIRECTAS, OVERAGE, ROAM, CHANGEM, CHANGER, AGE1, and AGE2 have a few missing values
+# Impute missing values with MICE
+
+> library(mice)
+
+> imp.churn2 = mice(churn2,m=3,method="pmm", maxit=50, seed=500)
+
+
+# decide which imputed version is best 
+
+> imp.churn2$imp$REVENUE
+> imp.churn2$imp$MOU
+> imp.churn2$imp$RECCHRGE
+> imp.churn2$imp$DIRECTAS
+> imp.churn2$imp$OVERAGE
+> imp.churn2$imp$ROAM
+> imp.churn2$imp$CHANGEM
+> imp.churn2$imp$CHANGER
+> imp.churn2$imp$AGE1
+> imp.churn2$imp$AGE2
+
+
+# imp 3 was the most ideal based on comparison to mean 
+
+Comp.churn2 <- complete(imp.churn2,3)
+
+
+# check correlation between numeric variables 
+
+> numeric<-Comp.churn2[c(1:21,23:25,27:32,48,49,52,55,56)]
+
+> library(corrplot)
+
+> Comp.churn2.cor = cor(numeric)
+
+> corrplot(Comp.churn2.cor)
+
+
+# check correlation between categorical variables and target
+
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$CREDIT_RATING)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$PRZM_NUM)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$REFURB)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$WEBCAP)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$TRUCK)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$RV)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$OCC)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$OWNRENT)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$MARRY)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$MAILORD)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$MAILRES)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$MAILFLAG)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$TRAVEL)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$PCOWN)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$CREDITCD)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$NEWCELLY)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$NEWCELLN)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$INCOME)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$MCYCLE)
+> chisq.test(Comp.churn2$CHURN, Comp.churn2$RETCALL)
+
+
+# check correlation between categorical variables that are significant to Churn
+
+> chisq.test(Comp.churn2$WEBCAP, Comp.churn2$RETCALL)
+> chisq.test(Comp.churn2$REFURB, Comp.churn2$RETCALL)
+> chisq.test(Comp.churn2$REFURB, Comp.churn2$WEBCAP)
+
+
+# use ROSE package to balance the target variable
+
+> library(ROSE)
+> over.churn2 <- ovun.sample(CHURN~., data=Comp.churn2, method="over", N=1406)$data
+> table(over.churn2$CHURN)
+
+
+# split data into training and test set
+
+> library(caret)
+
+> set.seed(2000)
+> split.churn<- createDataPartition(over.churn2$CHURN,p=0.7,list=FALSE)
+> churn.training2<- Comp.churn2[split.churn,]
+> churn.testing2<- Comp.churn2[-split.churn,]
+
+
+# check that summary stats for training and test are simmilar
+
+> dim(churn.training2)
+> dim(churn.testing2)
+
+> trn.churn2.check = table(churn.training2)
+> trn.churn2.check
+> tst.churn2.check = table(churn.testing2$CHURN)
+> tst.churn2.check
+
+> summary(churn.training2)
+> summary(churn.testing2)
+
+
+# use rattle form Random Forest Modeling
+
+> library(rattle)
+> rattle()
+
+
+# Load an R data frame.
+
+>crs$dataset <- churn.training2
+
+# Display a simple summary (structure) of the dataset.
+
+>str(crs$dataset)
+
+# Action the user selections from the Data tab. 
+
+# The following variable selections have been noted.
+
+> crs$input     <- c("CHANGEM", "MOUREC", "MONTHS", "UNIQSUBS",
+                   "PHONES", "MODELS", "EQPDAYS", "REFURB", "WEBCAP",
+                   "MAILFLAG", "RETACCPT", "RETCALL")
+
+> crs$numeric   <- c("CHANGEM", "MOUREC", "MONTHS", "UNIQSUBS",
+                   "PHONES", "MODELS", "EQPDAYS", "RETACCPT")
+
+> crs$categoric <- c("REFURB", "WEBCAP", "MAILFLAG", "RETCALL")
+
+> crs$target    <- "CHURN"
+> crs$risk      <- NULL
+> crs$ident     <- NULL
+> crs$ignore    <- c("REVENUE", "MOU", "RECCHRGE", "DIRECTAS", "OVERAGE", "ROAM", "CHANGER", "DROPVCE", "BLCKVCE", "UNANSVCE", "CUSTCARE", "THREEWAY", "OUTCALLS", "INCALLS", "PEAKVCE", "OPEAKVCE", "DROPBLK", "CALLFWDV", "CALLWAIT", "ACTVSUBS", "CSA", "AGE1", "AGE2", "CHILDREN", "CREDIT_RATING", "PRZM_NUM", "TRUCK", "RV", "OCC", "OWNRENT", "MARRY", "MAILORD", "MAILRES", "TRAVEL", "PCOWN", "CREDITCD", "RETCALLS", "NEWCELLY", "NEWCELLN", "REFER", "INCOME", "MCYCLE", "CREDITAD", "SETPRC")
+> crs$weights   <- NULL
+
+
+# Build a Random Forest model using the traditional approach
+# Initial Attempt
+
+> set.seed(crv$seed)
+
+> crs$rf <- randomForest::randomForest(CHURN ~ .,
+  data=crs$dataset[, c(crs$input, crs$target)], 
+  ntree=500,
+  mtry=3,
+  importance=TRUE,
+  na.action=na.omit,
+  replace=FALSE)
+
+# Generate textual output of the 'Random Forest' model.
+
+> crs$rf
+
+# The `pROC' package implements various AUC functions.
+
+# Calculate the Area Under the Curve (AUC).
+
+> pROC::roc(crs$rf$y, as.numeric(crs$rf$predicted))
+
+# Calculate the AUC Confidence Interval.
+
+> pROC::ci.auc(crs$rf$y, as.numeric(crs$rf$predicted))FALSE
+
+# List the importance of the variables.
+
+> rn <- round(randomForest::importance(crs$rf), 2)
+> rn[order(rn[,3], decreasing=TRUE),]
+
+# Evaluate model performance on an R dataset. 
+
+# Assign the R dataset to be used as the test set.
+
+> crs$testset <- churn.testing2
+
+# ROC Curve: requires the ROCR package.
+
+> library(ROCR)
+
+# ROC Curve: requires the ggplot2 package.
+
+> library(ggplot2, quietly=TRUE)
+
+# Generate an ROC Curve for the rf model on churn2testing.
+
+> crs$pr <- predict(crs$rf, newdata=na.omit(crs$testset),
+    type    = "prob")[,2]
+
+# Remove observations with missing target.
+
+> no.miss   <- na.omit(na.omit(crs$testset)$CHURN)
+> miss.list <- attr(no.miss, "na.action")
+> attributes(no.miss) <- NULL
+
+> if (length(miss.list))
+ {
+  pred <- prediction(crs$pr[-miss.list], no.miss)
+ } else
+ {
+  pred <- prediction(crs$pr, no.miss)
+ }
+
+> pe <- performance(pred, "tpr", "fpr")
+> au <- performance(pred, "auc")@y.values[[1]]
+> pd <- data.frame(fpr=unlist(pe@x.values), tpr=unlist(pe@y.values))
+> p <- ggplot(pd, aes(x=fpr, y=tpr))
+> p <- p + geom_line(colour="red")
+> p <- p + xlab("False Positive Rate") + ylab("True Positive Rate")
+> p <- p + ggtitle("ROC Curve Random Forest churn2testing CHURN")
+> p <- p + theme(plot.title=element_text(size=10))
+> p <- p + geom_line(data=data.frame(), aes(x=c(0,1), y=c(0,1)), colour="grey")
+> p <- p + annotate("text", x=0.50, y=0.00, hjust=0, vjust=0, size=5,
+                   label=paste("AUC =", round(au, 2)))
+> print(p)
+
+# Calculate the area under the curve for the plot.
+
+# Remove observations with missing target.
+
+> no.miss   <- na.omit(na.omit(crs$testset)$CHURN)
+> miss.list <- attr(no.miss, "na.action")
+> attributes(no.miss) <- NULL
+
+> if (length(miss.list))
+  {
+  pred <- prediction(crs$pr[-miss.list], no.miss)
+  } else
+  {
+  pred <- prediction(crs$pr, no.miss)
+  }
+> performance(pred, "auc")
+
+####################################################################################################
+
+# 2nd Attempt with 1 less variable
+
+# The following variable selections have been noted.
+
+> crs$input     <- c("CHANGEM", "MOUREC", "MONTHS", "UNIQSUBS",
+                   "MODELS", "EQPDAYS", "REFURB", "WEBCAP",
+                   "RETACCPT", "RETCALL")
+
+> crs$numeric   <- c("CHANGEM", "MOUREC", "MONTHS", "UNIQSUBS",
+                   "MODELS", "EQPDAYS", "RETACCPT")
+
+> crs$categoric <- c("REFURB", "WEBCAP", "RETCALL")
+
+> crs$target    <- "CHURN"
+> crs$risk      <- NULL
+> crs$ident     <- NULL
+> crs$ignore    <- c("REVENUE", "MOU", "RECCHRGE", "DIRECTAS", "OVERAGE", "ROAM", "CHANGER", "DROPVCE", "BLCKVCE", "UNANSVCE", "CUSTCARE", "THREEWAY", "OUTCALLS", "INCALLS", "PEAKVCE", "OPEAKVCE", "DROPBLK", "CALLFWDV", "CALLWAIT", "ACTVSUBS", "CSA", "PHONES", "AGE1", "AGE2", "CHILDREN", "CREDIT_RATING", "PRZM_NUM", "TRUCK", "RV", "OCC", "OWNRENT", "MARRY", "MAILORD", "MAILRES", "MAILFLAG", "TRAVEL", "PCOWN", "CREDITCD", "RETCALLS", "NEWCELLY", "NEWCELLN", "REFER", "INCOME", "MCYCLE", "CREDITAD", "SETPRC")
+> crs$weights   <- NULL
+
+# Build a Random Forest model using the traditional approach.
+
+> set.seed(crv$seed)
+
+> crs$rf <- randomForest::randomForest(CHURN ~ .,
+  data=crs$dataset[, c(crs$input, crs$target)], 
+  ntree=500,
+  mtry=3,
+  importance=TRUE,
+  na.action=na.omit,
+  replace=FALSE)
+
+# Generate textual output of the 'Random Forest' model.
+
+> crs$rf
+
+# The `pROC' package implements various AUC functions.
+
+# Calculate the Area Under the Curve (AUC).
+
+> pROC::roc(crs$rf$y, as.numeric(crs$rf$predicted))
+
+# Calculate the AUC Confidence Interval.
+
+> pROC::ci.auc(crs$rf$y, as.numeric(crs$rf$predicted))FALSE
+
+# List the importance of the variables.
+
+> rn <- round(randomForest::importance(crs$rf), 2)
+> rn[order(rn[,3], decreasing=TRUE),]
+
+# Evaluate model performance on an R dataset. 
+
+# Assign the R dataset to be used as the test set.
+
+> crs$testset <- churn.testing2
+
+# ROC Curve: requires the ROCR package.
+
+> library(ROCR)
+
+# ROC Curve: requires the ggplot2 package.
+
+> library(ggplot2, quietly=TRUE)
+
+# Generate an ROC Curve for the rf model on churn2testing.
+
+> crs$pr <- predict(crs$rf, newdata=na.omit(crs$testset),
+    type    = "prob")[,2]
+
+# Remove observations with missing target.
+
+> no.miss   <- na.omit(na.omit(crs$testset)$CHURN)
+> miss.list <- attr(no.miss, "na.action")
+> attributes(no.miss) <- NULL
+
+ if (length(miss.list))
+ {
+  pred <- prediction(crs$pr[-miss.list], no.miss)
+ } else
+ {
+  pred <- prediction(crs$pr, no.miss)
+ }
+
+> pe <- performance(pred, "tpr", "fpr")
+> au <- performance(pred, "auc")@y.values[[1]]
+> pd <- data.frame(fpr=unlist(pe@x.values), tpr=unlist(pe@y.values))
+> p <- ggplot(pd, aes(x=fpr, y=tpr))
+> p <- p + geom_line(colour="red")
+> p <- p + xlab("False Positive Rate") + ylab("True Positive Rate")
+> p <- p + ggtitle("ROC Curve Random Forest churn2testing CHURN")
+> p <- p + theme(plot.title=element_text(size=10))
+> p <- p + geom_line(data=data.frame(), aes(x=c(0,1), y=c(0,1)), colour="grey")
+> p <- p + annotate("text", x=0.50, y=0.00, hjust=0, vjust=0, size=5,
+                   label=paste("AUC =", round(au, 2)))
+> print(p)
+
+# Calculate the area under the curve for the plot.
+
+# Remove observations with missing target.
+
+> no.miss   <- na.omit(na.omit(crs$testset)$CHURN)
+> miss.list <- attr(no.miss, "na.action")
+> attributes(no.miss) <- NULL
+
+> if (length(miss.list))
+ {
+  pred <- prediction(crs$pr[-miss.list], no.miss)
+ } else
+ {
+  pred <- prediction(crs$pr, no.miss)
+ }
+> performance(pred, "auc")
+
+########################################################################
+# Tune
+
+# Plot the error rate against the number of trees.
+
+> plot(crs$rf, main="")
+> legend("topright", c("OOB", "0", "1"), text.col=1:6, lty=1:3, col=1:3)
+> title(main="Error Rates Random Forest churn.training2",
+    sub=paste("Rattle", format(Sys.time(), "%Y-%b-%d %H:%M:%S"), Sys.info()["user"]))
+
+########################################################################
+# run optimal variables with tuned hyperparameters 
+
+# The following variable selections have been noted.
+
+> crs$input     <- c("CHANGEM", "MOUREC", "MONTHS", "UNIQSUBS",
+                   "MODELS", "EQPDAYS", "REFURB", "WEBCAP",
+                   "RETACCPT", "RETCALL")
+
+> crs$numeric   <- c("CHANGEM", "MOUREC", "MONTHS", "UNIQSUBS",
+                   "MODELS", "EQPDAYS", "RETACCPT")
+
+> crs$categoric <- c("REFURB", "WEBCAP", "RETCALL")
+
+> crs$target    <- "CHURN"
+> crs$risk      <- NULL
+> crs$ident     <- NULL
+> crs$ignore    <- c("REVENUE", "MOU", "RECCHRGE", "DIRECTAS", "OVERAGE", "ROAM", "CHANGER", "DROPVCE", "BLCKVCE", "UNANSVCE", "CUSTCARE", "THREEWAY", "OUTCALLS", "INCALLS", "PEAKVCE", "OPEAKVCE", "DROPBLK", "CALLFWDV", "CALLWAIT", "ACTVSUBS", "CSA", "PHONES", "AGE1", "AGE2", "CHILDREN", "CREDIT_RATING", "PRZM_NUM", "TRUCK", "RV", "OCC", "OWNRENT", "MARRY", "MAILORD", "MAILRES", "MAILFLAG", "TRAVEL", "PCOWN", "CREDITCD", "RETCALLS", "NEWCELLY", "NEWCELLN", "REFER", "INCOME", "MCYCLE", "CREDITAD", "SETPRC")
+> crs$weights   <- NULL
+
+# Build a Random Forest model using the traditional approach.
+
+> set.seed(crv$seed)
+
+> crs$rf <- randomForest::randomForest(CHURN ~ .,
+  data=crs$dataset[, c(crs$input, crs$target)], 
+  ntree=300,
+  mtry=3,
+  importance=TRUE,
+  na.action=na.omit,
+  replace=FALSE)
+
+# Generate textual output of the 'Random Forest' model.
+
+> crs$rf
+
+# The `pROC' package implements various AUC functions.
+
+# Calculate the Area Under the Curve (AUC).
+
+> pROC::roc(crs$rf$y, as.numeric(crs$rf$predicted))
+
+# Calculate the AUC Confidence Interval.
+
+> pROC::ci.auc(crs$rf$y, as.numeric(crs$rf$predicted))FALSE
+
+# List the importance of the variables.
+
+> rn <- round(randomForest::importance(crs$rf), 2)
+> rn[order(rn[,3], decreasing=TRUE),]
+
+# Evaluate model performance on an R dataset. 
+
+# Assign the R dataset to be used as the test set.
+
+> crs$testset <- churn.testing2
+
+# ROC Curve: requires the ROCR package.
+
+> library(ROCR)
+
+# ROC Curve: requires the ggplot2 package.
+
+> library(ggplot2, quietly=TRUE)
+
+# Generate an ROC Curve for the rf model on churn2testing.
+
+> crs$pr <- predict(crs$rf, newdata=na.omit(crs$testset),
+    type    = "prob")[,2]
+
+# Remove observations with missing target.
+
+> no.miss   <- na.omit(na.omit(crs$testset)$CHURN)
+> miss.list <- attr(no.miss, "na.action")
+> attributes(no.miss) <- NULL
+
+> if (length(miss.list))
+ {
+  pred <- prediction(crs$pr[-miss.list], no.miss)
+ } else
+ {
+  pred <- prediction(crs$pr, no.miss)
+ }
+
+> pe <- performance(pred, "tpr", "fpr")
+> au <- performance(pred, "auc")@y.values[[1]]
+> pd <- data.frame(fpr=unlist(pe@x.values), tpr=unlist(pe@y.values))
+> p <- ggplot(pd, aes(x=fpr, y=tpr))
+> p <- p + geom_line(colour="red")
+> p <- p + xlab("False Positive Rate") + ylab("True Positive Rate")
+> p <- p + ggtitle("ROC Curve Random Forest churn2testing CHURN")
+> p <- p + theme(plot.title=element_text(size=10))
+> p <- p + geom_line(data=data.frame(), aes(x=c(0,1), y=c(0,1)), colour="grey")
+> p <- p + annotate("text", x=0.50, y=0.00, hjust=0, vjust=0, size=5,
+                   label=paste("AUC =", round(au, 2)))
+> print(p)
+
+# Calculate the area under the curve for the plot.
+
+# Remove observations with missing target.
+
+> no.miss   <- na.omit(na.omit(crs$testset)$CHURN)
+> miss.list <- attr(no.miss, "na.action")
+> attributes(no.miss) <- NULL
+
+> if (length(miss.list))
+ {
+  pred <- prediction(crs$pr[-miss.list], no.miss)
+ } else
+ {
+  pred <- prediction(crs$pr, no.miss)
+ }
+> performance(pred, "auc")
